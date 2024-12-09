@@ -5,6 +5,7 @@ WEBSITE = 'CDN'
 import re
 import os
 import sys
+import json
 # try:
 #     from resources.lib.autotranslate import AutoTranslate
 #     portuguese = AutoTranslate.language('Portuguese')
@@ -89,118 +90,49 @@ class source:
                                     name = name + ' - ' + audio
                                     links.append((name,url))
 
-                                #     try:
-                                #         r = requests.get(url,headers=headers)
-                                #         src = r.text
-                                #         try:
-                                #             src = re.compile('window.location.href="(.*?)"').findall(src)[0]
-                                #         except:
-                                #             src = ''
-                                #         if src:
-                                #             try:
-                                #                 sub = src.split('http')[2]
-                                #                 sub = 'http%s'%sub
-                                #                 try:
-                                #                     sub = sub.split('&')[0]
-                                #                 except:
-                                #                     pass
-                                #                 if not '.srt' in sub:
-                                #                     sub = ''                                            
-                                #             except:
-                                #                 sub = ''
-                                #             try:
-                                #                 src = src.split('?')[0]
-                                #             except:
-                                #                 pass
-                                #             try:
-                                #                 src = src.split('#')[0]
-                                #             except:
-                                #                 pass                                                 
-                                #             name = name + ' - ' + audio
-                                #             servers.append((name,src,sub))
-                                #     except:
-                                #         pass
-                                # elif name == 'CDN':
-                                #     name = 'ALTERNATIVO' + ' - ' + audio
-                                #     servers.append((name,url,''))
-
         else:
-            url = 'https://embed.warezcdn.com/filme/%s'%str(imdb)
-            data = requests.get(url,headers=headers).text
-            audio_id = re.compile('<div class="selectAudioButton.+?" data-load-hosts="(.*?)">(.*?)</div>', re.MULTILINE|re.DOTALL|re.IGNORECASE).findall(data)
-            if not audio_id:
-                audio_id = []
-                idioma = re.compile('<div class="selectAudio">(.*?)</div>', re.MULTILINE|re.DOTALL|re.IGNORECASE).findall(data)
-                if idioma:
-                    text = idioma[0].lower()
-                    if 'dublado' in text:
-                        lg = 'DUBLADO'
-                    elif 'legendado' in text:
-                        lg = 'LEGENDADO'
-                    else:
-                        lg = ''
-                    if lg:
-                        id_audio = re.compile('<div class="hostList active" data-audio-id="(.*?)">', re.MULTILINE|re.DOTALL|re.IGNORECASE).findall(data)
-                        if id_audio:
-                            audio_id.append((id_audio[0],lg))
-            if audio_id:
-                lang = {}
-                for id, lg in audio_id:
-                    if 'LEGENDADO' in lg:
-                        lang[id]=english
-                    elif 'DUBLADO' in lg:
-                        lang[id]=portuguese
-                hosts = re.compile('<div class="buttonLoadHost.+?" data-load-embed="(.*?)" data-load-embed-host="(.*?)">', re.MULTILINE|re.DOTALL|re.IGNORECASE).findall(data)
-                if hosts:
-                    for id, name in hosts:
-                        lg=lang[id]
-                        if name in ['mixdrop', 'streamtape']:
-                            url = 'https://embed.warezcdn.net/getPlay.php?id=%s&sv=%s'%(str(id),name)
-                            if name == 'streamtape':
-                                name = 'STREAMTAPE' + ' - ' + lg
-                            else:
-                                name = 'MIXDROP' + ' - ' + lg
-                            links.append((name,url))                           
+            # movie page url
+            referer_url = 'https://embed.warezcdn.link/filme/%s' % imdb
 
-                        #     try:
-                        #         r = requests.get(url,headers=headers)
-                        #         src = r.text
-                        #         try:
-                        #             src = re.compile('window.location.href="(.*?)"').findall(src)[0]
-                        #         except:
-                        #             src = ''
-                        #         if src:
-                        #             try:
-                        #                 sub = src.split('http')[2]
-                        #                 sub = 'http%s'%sub
-                        #                 try:
-                        #                     sub = sub.split('&')[0]
-                        #                 except:
-                        #                     pass
-                        #                 if not '.srt' in sub:
-                        #                     sub = ''                                            
-                        #             except:
-                        #                 sub = ''
-                        #             try:
-                        #                 src = src.split('?')[0]
-                        #             except:
-                        #                 pass
-                        #             try:
-                        #                 src = src.split('#')[0]
-                        #             except:
-                        #                 pass
-                        #             if name == 'streamtape':
-                        #                 name = 'STREAMTAPE' + ' - ' + lg
-                        #             else:
-                        #                 name = 'MIXDROP' + ' - ' + lg
-                        #             servers.append((name,src,sub))
-                        #     except:
-                        #         pass
-                        # elif name == 'warezcdn':
-                        #     src = 'https://warezcdn.com/player/player.php?id=%s'%str(id)
-                        #     name = 'ALTERNATIVO' + ' - ' + lg
-                        #     servers.append((name,src,''))
+            # request html content of the movie page
+            data = requests.get(referer_url).text
 
+            # extract audio data from the html content
+            audio_ids = re.compile('let data = (?:\'|\")(\[.+\])(?:\'|\")', re.MULTILINE|re.DOTALL|re.IGNORECASE).findall(data)
+            audio_ids = json.loads(audio_ids[0])
+            
+            if audio_ids:
+                for audio in audio_ids:
+                    if audio['audio'] == '1':
+                        lg = portuguese
+                    elif audio['audio'] == '2':
+                        lg = english
+
+                    servers = ['warezcdn', 'mixdrop']
+                    for server in servers:
+                        if server in audio['servers']:
+                            embed_referer_url = 'https://embed.warezcdn.link/getEmbed.php?id=%s&sv=%s&lang=%s' % (audio['id'], server, audio['audio'])
+                            play_url = 'https://embed.warezcdn.link/getPlay.php?id=%s&sv=%s' % (audio['id'], server)
+
+                            # get referer urls to avoid bot detection
+                            requests.get(referer_url)
+                            requests.get(
+                                embed_referer_url,
+                                headers={'Referer': referer_url}
+                                )
+                            
+                            # get embed play html
+                            play_response = requests.get(
+                                play_url,
+                                headers={'Referer': embed_referer_url}
+                                ).text
+
+                            # extract video url from play_response
+                            video_url = re.compile('window.location.href = (?:\'|\")(.+)(?:\'|\")', re.MULTILINE|re.DOTALL|re.IGNORECASE).findall(play_response)[0]
+                            
+                            # save name and url to the list of links
+                            name = server.upper() + ' - ' + lg
+                            links.append((name,video_url))
 
         return links
     
