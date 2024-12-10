@@ -6,29 +6,24 @@ import re
 import os
 import sys
 import json
-# try:
-#     from resources.lib.autotranslate import AutoTranslate
-#     portuguese = AutoTranslate.language('Portuguese')
-#     english = AutoTranslate.language('English')
-#     select_option_name = AutoTranslate.language('select_option')
-# except ImportError:
-#     portuguese = 'DUBLADO'
-#     english = 'LEGENDADO'
-#     select_option_name = 'SELECIONE UMA OPÇÃO ABAIXO:'
-# try:
-#     from resources.lib import resolveurl
-#     from resources.lib.unblock import unblock as requests
-# except ImportError:
-#     local_path = os.path.dirname(os.path.realpath(__file__))
-#     lib_path = local_path.replace('scrapers', '')
-#     sys.path.append(lib_path)
-#     from resolvers import resolveurl
-#     from unblock import unblock as requests
-import requests
-from urllib.parse import urljoin as resolveurl
-portuguese = 'DUBLADO'
-english = 'LEGENDADO'
-select_option_name = 'SELECIONE UMA OPÇÃO ABAIXO:'
+try:
+    from resources.lib.autotranslate import AutoTranslate
+    portuguese = AutoTranslate.language('Portuguese')
+    english = AutoTranslate.language('English')
+    select_option_name = AutoTranslate.language('select_option')
+except ImportError:
+    portuguese = 'DUBLADO'
+    english = 'LEGENDADO'
+    select_option_name = 'SELECIONE UMA OPÇÃO ABAIXO:'
+try:
+    from resources.lib import resolveurl
+    from resources.lib.unblock import unblock as requests
+except ImportError:
+    local_path = os.path.dirname(os.path.realpath(__file__))
+    lib_path = local_path.replace('scrapers', '')
+    sys.path.append(lib_path)
+    from resolvers import resolveurl
+    from unblock import unblock as requests
 
 class source:
     @classmethod
