@@ -31,15 +31,9 @@ english = 'LEGENDADO'
 select_option_name = 'SELECIONE UMA OPÇÃO ABAIXO:'
 
 class source:
-    __headers__ = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0', 'Accept-Language': 'pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3'}
-
     @classmethod
     def warezcdn_servers(cls,imdb,season=False,episode=False):
         links = []
-        host_url = 'https://embed.warezcdn.link/'
-        referer = 'https://embed.warezcdn.com/'
-        headers = cls.__headers__
-        headers.update({'Referer': referer})        
         if season and episode:
             # get series page
             referer_url = 'https://embed.warezcdn.com/serie/%s'%(str(imdb))
@@ -161,48 +155,32 @@ class source:
     
     @classmethod
     def resolve_movies(cls,url):
-        #referer_player = 'https://warezcdn.com/'
-        referer_player = ''
         streams = []
-        if 'embed.warezcdn' in url:
-            referer = 'https://embed.warezcdn.com/'
-            headers = cls.__headers__
-            headers.update({'Referer': referer})            
+        if url:
+            # extract subtittles url
             try:
-                r = requests.get(url,headers=headers)
-                src = r.text
+                sub = url.split('http')[2]
+                sub = 'http%s'%sub
                 try:
-                    src = re.compile('window.location.href="(.*?)"').findall(src)[0]
+                    sub = sub.split('&')[0]
                 except:
-                    src = ''
-                if src:
-                    try:
-                        sub = src.split('http')[2]
-                        sub = 'http%s'%sub
-                        try:
-                            sub = sub.split('&')[0]
-                        except:
-                            pass
-                        if not '.srt' in sub:
-                            sub = ''                                            
-                    except:
-                        sub = ''
-                    try:
-                        src = src.split('?')[0]
-                    except:
-                        pass
-                    try:
-                        src = src.split('#')[0]
-                    except:
-                        pass
-                    stream, sub2 = resolveurl(src,referer_player)
-                    if sub:
-                        subfinal = sub
-                    else:
-                        subfinal = sub2
-                    streams.append((stream,subfinal))
+                    pass
+                if not '.srt' in sub:
+                    sub = ''
             except:
-                pass          
+                sub = ''
+
+            # extract video src
+            try:
+                stream = url.split('?')[0]
+            except:
+                try:
+                    stream = url.split('#')[0]
+                except:
+                    pass
+
+            # append results
+            streams.append((stream,sub))
         return streams
     
     @classmethod
@@ -210,51 +188,35 @@ class source:
         try:
             return cls.warezcdn_servers(imdb,season,episode)
         except:
-            return []    
+            return []  
 
     @classmethod
     def resolve_tvshows(cls,url):
-        #referer_player = 'https://warezcdn.com/'
-        referer_player = ''
         streams = []
-        if 'embed.warezcdn' in url:
-            referer = 'https://embed.warezcdn.com/'
-            headers = cls.__headers__
-            headers.update({'Referer': referer})            
+        if url:
+            # extract subtittles url
             try:
-                r = requests.get(url,headers=headers)
-                src = r.text
+                sub = url.split('http')[2]
+                sub = 'http%s'%sub
                 try:
-                    src = re.compile('window.location.href="(.*?)"').findall(src)[0]
+                    sub = sub.split('&')[0]
                 except:
-                    src = ''
-                if src:
-                    try:
-                        sub = src.split('http')[2]
-                        sub = 'http%s'%sub
-                        try:
-                            sub = sub.split('&')[0]
-                        except:
-                            pass
-                        if not '.srt' in sub:
-                            sub = ''                                            
-                    except:
-                        sub = ''
-                    try:
-                        src = src.split('?')[0]
-                    except:
-                        pass
-                    try:
-                        src = src.split('#')[0]
-                    except:
-                        pass
-                    stream, sub2 = resolveurl(src,referer_player)
-                    if sub:
-                        subfinal = sub
-                    else:
-                        subfinal = sub2
-                    streams.append((stream,subfinal))
+                    pass
+                if not '.srt' in sub:
+                    sub = ''
             except:
-                pass          
-        return streams                    
+                sub = ''
+
+            # extract video src
+            try:
+                stream = url.split('?')[0]
+            except:
+                try:
+                    stream = url.split('#')[0]
+                except:
+                    pass
+
+            # append results
+            streams.append((stream,sub))
+        return streams          
 
