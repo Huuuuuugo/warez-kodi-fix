@@ -5,7 +5,7 @@ from warez import *
 print("MOVIE SOURCES:")
 links = source.warezcdn_servers('tt1187064')
 for link in links:
-    print(source.resolve_tvshows(link[1]))
+    print(source.resolve_movies(link[1]))
     input()
 
 # serie

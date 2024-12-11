@@ -24,6 +24,11 @@ except ImportError:
     sys.path.append(lib_path)
     from resolvers import resolveurl
     from unblock import unblock as requests
+# import requests
+# portuguese = 'DUBLADO'
+# english = 'LEGENDADO'
+# select_option_name = 'SELECIONE UMA OPÇÃO ABAIXO:'
+
 
 class source:
     @classmethod
@@ -173,6 +178,15 @@ class source:
                     stream = url.split('#')[0]
                 except:
                     pass
+            
+            # format warezcn links
+            try:
+                stream_data = re.compile(r"(https://.+/)video/(.+)").findall(stream)[0]
+                host_url, video_id = stream_data
+                stream = '%splayer/index.php?data=%s&do=getVideo' % (host_url, video_id)
+            except:
+                pass
+
 
             # append results
             streams.append((stream,sub))
@@ -210,6 +224,14 @@ class source:
                     stream = url.split('#')[0]
                 except:
                     pass
+            
+            # format warezcn links
+            try:
+                stream_data = re.compile(r"(https://.+/)video/(.+)").findall(stream)[0]
+                host_url, video_id = stream_data
+                stream = '%splayer/index.php?data=%s&do=getVideo' % (host_url, video_id)
+            except:
+                pass
 
             # append results
             streams.append((stream,sub))
