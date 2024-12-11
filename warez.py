@@ -98,7 +98,7 @@ class source:
                             
                             # save name and url to the list of links
                             name = server.upper() + ' - ' + lg
-                            links.append((name,video_url))
+                            links.append((name,cls.resolve_tvshows(video_url)))
 
         else:
             # movie page url
@@ -142,7 +142,7 @@ class source:
                             
                             # save name and url to the list of links
                             name = server.upper() + ' - ' + lg
-                            links.append((name,video_url))
+                            links.append((name,cls.resolve_movies(video_url)))
 
         return links
     
