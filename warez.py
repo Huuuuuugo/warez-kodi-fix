@@ -179,14 +179,30 @@ class source:
                 except:
                     pass
             
-            # format warezcn links
+            # extract m3u8 links from warezcdn
             try:
                 stream_data = re.compile(r"(https://.+/)video/(.+)").findall(stream)[0]
                 host_url, video_id = stream_data
-                stream = '%splayer/index.php?data=%s&do=getVideo' % (host_url, video_id)
+
+                # make request for master.m3u8 url based on data from video_html_url
+                master_request_url = '%splayer/index.php?data=%s&do=getVideo' % (host_url, video_id)
+
+                master_m3u8_url = requests.post(
+                    master_request_url,
+                    data={'hash': video_id, 'r': ''},
+                    headers={'X-Requested-With': 'XMLHttpRequest'}
+                    )
+                master_m3u8_url = master_m3u8_url.json()['videoSource']
+
+                # extract the url for the playlist containing all the parts from master.m3u8
+                master_m3u8 = requests.get(master_m3u8_url).text
+                for line in master_m3u8.split('\n'):
+                    matches = re.compile(r"https?://[a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})(:\d+)?(/[^\s]*)?").match(line)
+                    if matches:
+                        stream = matches[0]
+                        break
             except:
                 pass
-
 
             # append results
             streams.append((stream,sub))
@@ -225,11 +241,28 @@ class source:
                 except:
                     pass
             
-            # format warezcn links
+            # extract m3u8 links from warezcdn
             try:
                 stream_data = re.compile(r"(https://.+/)video/(.+)").findall(stream)[0]
                 host_url, video_id = stream_data
-                stream = '%splayer/index.php?data=%s&do=getVideo' % (host_url, video_id)
+
+                # make request for master.m3u8 url based on data from video_html_url
+                master_request_url = '%splayer/index.php?data=%s&do=getVideo' % (host_url, video_id)
+
+                master_m3u8_url = requests.post(
+                    master_request_url,
+                    data={'hash': video_id, 'r': ''},
+                    headers={'X-Requested-With': 'XMLHttpRequest'}
+                    )
+                master_m3u8_url = master_m3u8_url.json()['videoSource']
+
+                # extract the url for the playlist containing all the parts from master.m3u8
+                master_m3u8 = requests.get(master_m3u8_url).text
+                for line in master_m3u8.split('\n'):
+                    matches = re.compile(r"https?://[a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})(:\d+)?(/[^\s]*)?").match(line)
+                    if matches:
+                        stream = matches[0]
+                        break
             except:
                 pass
 
