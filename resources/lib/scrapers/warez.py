@@ -6,6 +6,7 @@ import re
 import os
 import sys
 import json
+import requests
 try:
     from resources.lib.autotranslate import AutoTranslate
     portuguese = AutoTranslate.language('Portuguese')
@@ -17,17 +18,11 @@ except ImportError:
     select_option_name = 'SELECIONE UMA OPÇÃO ABAIXO:'
 try:
     from resources.lib import resolveurl
-    from resources.lib.unblock import unblock as requests
 except ImportError:
     local_path = os.path.dirname(os.path.realpath(__file__))
     lib_path = local_path.replace('scrapers', '')
     sys.path.append(lib_path)
     from resolvers import resolveurl
-    from unblock import unblock as requests
-# import requests
-# portuguese = 'DUBLADO'
-# english = 'LEGENDADO'
-# select_option_name = 'SELECIONE UMA OPÇÃO ABAIXO:'
 
 
 class source:
@@ -94,12 +89,11 @@ class source:
                                 ).text
 
                             # extract video url from play_response
-                            video_url = re.compile(r"window.location.href = (?:\'|\")(.+)(?:\'|\")", re.MULTILINE|re.DOTALL|re.IGNORECASE).findall(play_response)[0]
+                            video_url = re.compile(r"window.location.href = (?:\'|\")(.+)(?:\'|\")").findall(play_response)[0]
                             
                             # save name and url to the list of links
                             name = server.upper() + ' - ' + lg
-                            resolved_urls = cls.resolve_tvshows(video_url)
-                            links.append((name, resolved_urls[0][0], resolved_urls[0][1]))
+                            links.append((name, video_url))
 
         else:
             # movie page url
@@ -109,7 +103,7 @@ class source:
             data = requests.get(referer_url).text
 
             # extract audio data from the html content
-            audio_ids = re.compile(r"let data = (?:\'|\")(\[.+\])(?:\'|\")", re.MULTILINE|re.DOTALL|re.IGNORECASE).findall(data)
+            audio_ids = re.compile(r"let data = (?:\'|\")(\[.+\])(?:\'|\")").findall(data)
             audio_ids = json.loads(audio_ids[0])
             
             if audio_ids:
@@ -139,12 +133,11 @@ class source:
                                 ).text
 
                             # extract video url from play_response
-                            video_url = re.compile(r"window.location.href = (?:\'|\")(.+)(?:\'|\")", re.MULTILINE|re.DOTALL|re.IGNORECASE).findall(play_response)[0]
+                            video_url = re.compile(r"window.location.href = (?:\'|\")(.+)(?:\'|\")").findall(play_response)[0]
                             
                             # save name and url to the list of links
                             name = server.upper() + ' - ' + lg
-                            resolved_urls = cls.resolve_movies(video_url)
-                            links.append((name, resolved_urls[0][0], resolved_urls[0][1]))
+                            links.append((name, video_url))
 
         return links
     
@@ -192,9 +185,11 @@ class source:
                 master_m3u8_url = requests.post(
                     master_request_url,
                     data={'hash': video_id, 'r': ''},
-                    headers={'X-Requested-With': 'XMLHttpRequest'}
+                    headers={'X-Requested-With': 'XMLHttpRequest'},
+                    allow_redirects=True
                     )
-                master_m3u8_url = master_m3u8_url.json()['videoSource']
+                master_m3u8_url = master_m3u8_url.text
+                master_m3u8_url = json.loads(master_m3u8_url)['videoSource']
 
                 # extract the url for the playlist containing all the parts from master.m3u8
                 master_m3u8 = requests.get(master_m3u8_url).text
@@ -254,9 +249,11 @@ class source:
                 master_m3u8_url = requests.post(
                     master_request_url,
                     data={'hash': video_id, 'r': ''},
-                    headers={'X-Requested-With': 'XMLHttpRequest'}
+                    headers={'X-Requested-With': 'XMLHttpRequest'},
+                    allow_redirects=True
                     )
-                master_m3u8_url = master_m3u8_url.json()['videoSource']
+                master_m3u8_url = master_m3u8_url.text
+                master_m3u8_url = json.loads(master_m3u8_url)['videoSource']
 
                 # extract the url for the playlist containing all the parts from master.m3u8
                 master_m3u8 = requests.get(master_m3u8_url).text
@@ -271,4 +268,3 @@ class source:
             # append results
             streams.append((stream,sub))
         return streams          
-
