@@ -65,9 +65,9 @@ class source:
             if audio_ids:
                 for audio in audio_ids:
                     if int(audio['audio']) == 1:
-                        lg = portuguese
-                    elif int(audio['audio']) == 2:
                         lg = english
+                    elif int(audio['audio']) == 2:
+                        lg = portuguese
 
                     servers = ['warezcdn', 'mixdrop']
                     for server in servers:
@@ -109,9 +109,9 @@ class source:
             if audio_ids:
                 for audio in audio_ids:
                     if int(audio['audio']) == 1:
-                        lg = portuguese
-                    elif int(audio['audio']) == 2:
                         lg = english
+                    elif int(audio['audio']) == 2:
+                        lg = portuguese
 
                     servers = ['warezcdn', 'mixdrop']
                     for server in servers:
