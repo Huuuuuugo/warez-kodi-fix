@@ -31,7 +31,7 @@ class source:
         links = []
         if season and episode:
             # get series page
-            referer_url = 'https://embed.warezcdn.com/serie/%s'%(str(imdb))
+            referer_url = 'https://embed.warezcdn.link/serie/%s'%(str(imdb))
             data = requests.get(referer_url).text
 
             # extract url to get seasons information
