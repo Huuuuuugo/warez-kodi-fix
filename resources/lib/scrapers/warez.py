@@ -7,6 +7,7 @@ import os
 import sys
 import json
 import requests
+import resources.lib.jsunpack as jsunpack
 try:
     from resources.lib.autotranslate import AutoTranslate
     portuguese = AutoTranslate.language('Portuguese')
@@ -174,32 +175,54 @@ class source:
                 except:
                     pass
             
+            # extract mp4 link from mixdrop
+            if 'mixdrop' in url:
+                try:
+                    # requests html for the video player on mixdrop
+                    video_html_response = requests.get(
+                        url,
+                        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"}
+                        )
+                    video_html_response = video_html_response.text
+                    
+                    # deobfuscate js code
+                    js_matches = re.compile(r"eval\((.+)\)").findall(video_html_response)
+                    for packed_js in js_matches:
+                        if 'delivery' in packed_js:
+                            mdcore = jsunpack.unpack(packed_js)
+                    
+                    stream = 'https:' + re.compile(r"MDCore.wurl=\"(.+?)\"").findall(mdcore)[0]
+
+                except:
+                    pass
+
             # extract m3u8 links from warezcdn
-            try:
-                stream_data = re.compile(r"(https://.+/)video/(.+)").findall(stream)[0]
-                host_url, video_id = stream_data
+            else:
+                try:
+                    stream_data = re.compile(r"(https://.+/)video/(.+)").findall(stream)[0]
+                    host_url, video_id = stream_data
 
-                # make request for master.m3u8 url based on data from video_html_url
-                master_request_url = '%splayer/index.php?data=%s&do=getVideo' % (host_url, video_id)
+                    # make request for master.m3u8 url based on data from video_html_url
+                    master_request_url = '%splayer/index.php?data=%s&do=getVideo' % (host_url, video_id)
 
-                master_m3u8_url = requests.post(
-                    master_request_url,
-                    data={'hash': video_id, 'r': ''},
-                    headers={'X-Requested-With': 'XMLHttpRequest'},
-                    allow_redirects=True
-                    )
-                master_m3u8_url = master_m3u8_url.text
-                master_m3u8_url = json.loads(master_m3u8_url)['videoSource']
+                    master_m3u8_url = requests.post(
+                        master_request_url,
+                        data={'hash': video_id, 'r': ''},
+                        headers={'X-Requested-With': 'XMLHttpRequest'},
+                        allow_redirects=True
+                        )
+                    master_m3u8_url = master_m3u8_url.text
+                    master_m3u8_url = json.loads(master_m3u8_url)['videoSource']
 
-                # extract the url for the playlist containing all the parts from master.m3u8
-                master_m3u8 = requests.get(master_m3u8_url).text
-                for line in master_m3u8.split('\n'):
-                    matches = re.compile(r"https?://[a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})(:\d+)?(/[^\s]*)?").match(line)
-                    if matches:
-                        stream = matches[0]
-                        break
-            except:
-                pass
+                    # extract the url for the playlist containing all the parts from master.m3u8
+                    master_m3u8 = requests.get(master_m3u8_url).text
+                    for line in master_m3u8.split('\n'):
+                        matches = re.compile(r"https?://[a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})(:\d+)?(/[^\s]*)?").match(line)
+                        if matches:
+                            stream = matches[0]
+                            break
+                except:
+                    pass
 
             # append results
             streams.append((stream,sub))
@@ -238,32 +261,54 @@ class source:
                 except:
                     pass
             
+            # extract mp4 link from mixdrop
+            if 'mixdrop' in url:
+                try:
+                    # requests html for the video player on mixdrop
+                    video_html_response = requests.get(
+                        url,
+                        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"}
+                        )
+                    video_html_response = video_html_response.text
+                    
+                    # deobfuscate js code
+                    js_matches = re.compile(r"eval\((.+)\)").findall(video_html_response)
+                    for packed_js in js_matches:
+                        if 'delivery' in packed_js:
+                            mdcore = jsunpack.unpack(packed_js)
+                    
+                    stream = 'https:' + re.compile(r"MDCore.wurl=\"(.+?)\"").findall(mdcore)[0]
+
+                except:
+                    pass
+
             # extract m3u8 links from warezcdn
-            try:
-                stream_data = re.compile(r"(https://.+/)video/(.+)").findall(stream)[0]
-                host_url, video_id = stream_data
+            else:
+                try:
+                    stream_data = re.compile(r"(https://.+/)video/(.+)").findall(stream)[0]
+                    host_url, video_id = stream_data
 
-                # make request for master.m3u8 url based on data from video_html_url
-                master_request_url = '%splayer/index.php?data=%s&do=getVideo' % (host_url, video_id)
+                    # make request for master.m3u8 url based on data from video_html_url
+                    master_request_url = '%splayer/index.php?data=%s&do=getVideo' % (host_url, video_id)
 
-                master_m3u8_url = requests.post(
-                    master_request_url,
-                    data={'hash': video_id, 'r': ''},
-                    headers={'X-Requested-With': 'XMLHttpRequest'},
-                    allow_redirects=True
-                    )
-                master_m3u8_url = master_m3u8_url.text
-                master_m3u8_url = json.loads(master_m3u8_url)['videoSource']
+                    master_m3u8_url = requests.post(
+                        master_request_url,
+                        data={'hash': video_id, 'r': ''},
+                        headers={'X-Requested-With': 'XMLHttpRequest'},
+                        allow_redirects=True
+                        )
+                    master_m3u8_url = master_m3u8_url.text
+                    master_m3u8_url = json.loads(master_m3u8_url)['videoSource']
 
-                # extract the url for the playlist containing all the parts from master.m3u8
-                master_m3u8 = requests.get(master_m3u8_url).text
-                for line in master_m3u8.split('\n'):
-                    matches = re.compile(r"https?://[a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})(:\d+)?(/[^\s]*)?").match(line)
-                    if matches:
-                        stream = matches[0]
-                        break
-            except:
-                pass
+                    # extract the url for the playlist containing all the parts from master.m3u8
+                    master_m3u8 = requests.get(master_m3u8_url).text
+                    for line in master_m3u8.split('\n'):
+                        matches = re.compile(r"https?://[a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})(:\d+)?(/[^\s]*)?").match(line)
+                        if matches:
+                            stream = matches[0]
+                            break
+                except:
+                    pass
 
             # append results
             streams.append((stream,sub))
