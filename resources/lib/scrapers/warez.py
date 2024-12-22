@@ -28,11 +28,11 @@ except ImportError:
 
 class source:
     @classmethod
-    def warezcdn_servers(cls,imdb,season=False,episode=False):
+    def warezcdn_servers(cls, imdb, season=False, episode=False):
         links = []
         if season and episode:
             # get series page
-            referer_url = 'https://embed.warezcdn.link/serie/%s'%(str(imdb))
+            referer_url = 'https://embed.warezcdn.link/serie/%s' % (str(imdb))
             data = requests.get(referer_url).text
 
             # extract url to get seasons information
@@ -143,20 +143,21 @@ class source:
         return links
     
     @classmethod
-    def search_movies(cls,imdb,year):
+    def search_movies(cls, imdb, year):
         try:
-            return cls.warezcdn_servers(imdb,False,False)
+            return cls.warezcdn_servers(imdb, False, False)
         except:
             return []      
     
     @classmethod
-    def resolve_movies(cls,url):
+    def resolve_movies(cls, url):
         streams = []
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
         if url:
-            # extract subtittles url
+            # extract subtitles url
             try:
                 sub = url.split('http')[2]
-                sub = 'http%s'%sub
+                sub = 'http%s' % sub
                 try:
                     sub = sub.split('&')[0]
                 except:
@@ -181,8 +182,8 @@ class source:
                     # requests html for the video player on mixdrop
                     video_html_response = requests.get(
                         url,
-                        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"}
-                        )
+                        headers={"User-Agent": user_agent}
+                    )
                     video_html_response = video_html_response.text
                     
                     # deobfuscate js code
@@ -191,7 +192,7 @@ class source:
                         if 'delivery' in packed_js:
                             mdcore = jsunpack.unpack(packed_js)
                     
-                    stream = 'https:' + re.compile(r"MDCore.wurl=\"(.+?)\"").findall(mdcore)[0]
+                    stream = 'https:' + re.compile(r"MDCore.wurl=\"(.+?)\"").findall(mdcore)[0] +'|user-agent=%s' %user_agent
 
                 except:
                     pass
@@ -210,7 +211,7 @@ class source:
                         data={'hash': video_id, 'r': ''},
                         headers={'X-Requested-With': 'XMLHttpRequest'},
                         allow_redirects=True
-                        )
+                    )
                     master_m3u8_url = master_m3u8_url.text
                     master_m3u8_url = json.loads(master_m3u8_url)['videoSource']
 
@@ -225,24 +226,25 @@ class source:
                     pass
 
             # append results
-            streams.append((stream,sub))
+            streams.append((stream, sub, user_agent))
         return streams
     
     @classmethod
-    def search_tvshows(cls,imdb,year,season,episode):
+    def search_tvshows(cls, imdb, year, season, episode):
         try:
-            return cls.warezcdn_servers(imdb,season,episode)
+            return cls.warezcdn_servers(imdb, season, episode)
         except:
             return []  
 
     @classmethod
-    def resolve_tvshows(cls,url):
+    def resolve_tvshows(cls, url):
         streams = []
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"
         if url:
-            # extract subtittles url
+            # extract subtitles url
             try:
                 sub = url.split('http')[2]
-                sub = 'http%s'%sub
+                sub = 'http%s' % sub
                 try:
                     sub = sub.split('&')[0]
                 except:
@@ -267,8 +269,8 @@ class source:
                     # requests html for the video player on mixdrop
                     video_html_response = requests.get(
                         url,
-                        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"}
-                        )
+                        headers={"User-Agent": user_agent}
+                    )
                     video_html_response = video_html_response.text
                     
                     # deobfuscate js code
@@ -277,7 +279,7 @@ class source:
                         if 'delivery' in packed_js:
                             mdcore = jsunpack.unpack(packed_js)
                     
-                    stream = 'https:' + re.compile(r"MDCore.wurl=\"(.+?)\"").findall(mdcore)[0]
+                    stream = 'https:' + re.compile(r"MDCore.wurl=\"(.+?)\"").findall(mdcore)[0] +'|user-agent=%s' %user_agent
 
                 except:
                     pass
@@ -296,7 +298,7 @@ class source:
                         data={'hash': video_id, 'r': ''},
                         headers={'X-Requested-With': 'XMLHttpRequest'},
                         allow_redirects=True
-                        )
+                    )
                     master_m3u8_url = master_m3u8_url.text
                     master_m3u8_url = json.loads(master_m3u8_url)['videoSource']
 
@@ -311,5 +313,5 @@ class source:
                     pass
 
             # append results
-            streams.append((stream,sub))
-        return streams          
+            streams.append((stream, sub, user_agent))
+        return streams
